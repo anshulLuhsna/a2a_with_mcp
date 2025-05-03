@@ -3,7 +3,7 @@ import json
 import traceback
 import sys
 
-from typing import Tuple, Any
+from typing import Tuple, Any, List
 from service.client.client import ConversationClient
 from service.types import (
     Conversation,
@@ -40,6 +40,7 @@ async def ListConversations() -> list[Conversation]:
     return response.result
   except Exception as e:
     print("Failed to list conversations: ", e)
+    return []
 
 async def SendMessage(message: Message) -> str | None:
   client = ConversationClient(server_url)
@@ -64,6 +65,7 @@ async def ListRemoteAgents():
     return response.result
   except Exception as e:
     print("Failed to read agents", e)
+    return []
 
 async def AddRemoteAgent(path: str):
   client = ConversationClient(server_url)
@@ -79,6 +81,7 @@ async def GetEvents() -> list[Event]:
     return response.result
   except Exception as e:
     print("Failed to get events", e)
+    return []
 
 async def GetProcessingMessages():
   client = ConversationClient(server_url)
@@ -87,17 +90,19 @@ async def GetProcessingMessages():
     return dict(response.result)
   except Exception as e:
     print("Error getting pending messages", e)
+    return {}
 
 def GetMessageAliases():
   return {}
 
-async def GetTasks():
+async def GetTasks() -> List[Task]:
   client = ConversationClient(server_url)
   try:
     response = await client.list_tasks(ListTaskRequest())
-    return response.result
+    return response.result or []  # Return empty list if response.result is None
   except Exception as e:
     print("Failed to list tasks ", e)
+    return []  # Return empty list on error
 
 async def ListMessages(conversation_id: str) -> list[Message]:
   client = ConversationClient(server_url)
@@ -106,7 +111,7 @@ async def ListMessages(conversation_id: str) -> list[Message]:
     return response.result
   except Exception as e:
     print("Failed to list messages ", e)
-
+    return []
 
 async def UpdateAppState(state: AppState, conversation_id: str):
   """Update the app state."""
@@ -127,7 +132,8 @@ async def UpdateAppState(state: AppState, conversation_id: str):
       ]
 
     state.task_list = []
-    for task in await GetTasks():
+    tasks = await GetTasks()
+    for task in tasks:
       state.task_list.append(
           SessionTask(
               session_id=extract_conversation_id(task),

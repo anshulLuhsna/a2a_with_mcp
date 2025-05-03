@@ -27,11 +27,17 @@ from service.types import (
     Conversation,
 )
 import json
+from urllib.parse import urlparse
 
 class ConversationClient:
 
   def __init__(self, base_url):
-    self.base_url = base_url.rstrip("/")
+    # Ensure the base_url has a scheme
+    parsed_url = urlparse(base_url)
+    if not parsed_url.scheme:
+        self.base_url = f"http://{base_url}".rstrip("/")
+    else:
+        self.base_url = base_url.rstrip("/")
 
   async def send_message(self, payload: SendMessageRequest) -> SendMessageResponse:
     return SendMessageResponse(**await self._send_request(payload))
@@ -40,6 +46,8 @@ class ConversationClient:
     async with httpx.AsyncClient() as client:
       try:
         endpoint_url = api(request.method)
+        # Log the endpoint URL for debugging
+        print(f"Making request to: {endpoint_url}")
         response = await client.post(
           endpoint_url, json=request.model_dump()
         )
@@ -49,6 +57,9 @@ class ConversationClient:
         raise AgentClientHTTPError(e.response.status_code, str(e)) from e
       except json.JSONDecodeError as e:
         raise AgentClientJSONError(str(e)) from e
+      except Exception as e:
+        print(f"Unexpected error in _send_request: {str(e)}")
+        return {"result": None}  # Return a default result that won't break the calling code
 
   async def create_conversation(self, payload: CreateConversationRequest) -> CreateConversationResponse:
     return CreateConversationResponse(**await self._send_request(payload))
