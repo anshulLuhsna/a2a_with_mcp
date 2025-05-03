@@ -7,7 +7,6 @@ matplotlib>=3.7.0
 pydantic>=2.0.0
 requests>=2.28.0
 # For A2A common types
--e ./common
 # Assuming A2A common types are available one level up
 # Add relative path or installable package if needed
 # e.g., -e ../common 
