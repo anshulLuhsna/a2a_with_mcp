@@ -26,14 +26,12 @@ from .state import (
     StateTask,
     StateEvent
 )
-from utils.url import normalize_base
+from .url_utils import BASE as server_url, api
 import asyncio
 import threading
 from common.types import Artifact, Message, Task, Part, TextPart
 
-# Get orchestrator URL from environment variable with a default fallback
-# and normalize it to ensure it has the correct scheme
-server_url = normalize_base(os.environ.get("ORCHESTRATOR_URL", "localhost:12000"))
+# server_url is now imported from url_utils
 
 async def ListConversations() -> list[Conversation]:
   client = ConversationClient(server_url)
@@ -150,10 +148,10 @@ async def UpdateApiKey(api_key: str):
         # Set the environment variable
         os.environ["GOOGLE_API_KEY"] = api_key
         
-        # Call the update API endpoint
+        # Call the update API endpoint using the api helper
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{server_url}/api_key/update",
+                api("api_key/update"),
                 json={"api_key": api_key}
             )
             response.raise_for_status()
