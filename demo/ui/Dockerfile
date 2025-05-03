@@ -17,6 +17,9 @@ RUN uv pip install --system --no-cache-dir -e /app/ui
 # Copy common library for imports
 COPY common/ /app/common/
 
+# Copy hosts directory
+COPY hosts/ /app/hosts/
+
 EXPOSE 12000
 ENV ORCHESTRATOR_URL="http://orchestrator:8000"
 
