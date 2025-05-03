@@ -20,5 +20,8 @@ COPY common/ /app/common/
 EXPOSE 12000
 ENV ORCHESTRATOR_URL="http://orchestrator:8000"
 
+# Expose hosts/ and state/ as top‑level packages
+ENV PYTHONPATH="/app/ui:/app:${PYTHONPATH}"
+
 # Run using the module path
 CMD ["python", "-m", "ui.main", "--host", "0.0.0.0", "--port", "12000"]
