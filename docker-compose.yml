@@ -96,7 +96,7 @@ services:
       - "80:12000" # Map host port 80 to CORRECTED container port 12000
     environment:
       # UI talks to orchestrator on its internal port 8000
-      ORCHESTRATOR_URL: "http://orchestrator:8000"
+      ORCHESTRATOR_URL: "orchestrator:8000"
     networks:
       - app-net
     depends_on:

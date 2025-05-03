@@ -1,6 +1,7 @@
 import httpx
 from httpx_sse import connect_sse
 from typing import Any, AsyncIterable
+from urllib.parse import urljoin
 from service.types import (
     CreateConversationRequest,
     CreateConversationResponse,
@@ -38,8 +39,9 @@ class ConversationClient:
   async def _send_request(self, request: JSONRPCRequest) -> dict[str, Any]:
     async with httpx.AsyncClient() as client:
       try:
+        endpoint_url = urljoin(self.base_url + "/", request.method)
         response = await client.post(
-          self.base_url + "/" + request.method, json=request.model_dump()
+          endpoint_url, json=request.model_dump()
         )
         response.raise_for_status()
         return response.json()

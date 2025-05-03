@@ -26,11 +26,14 @@ from .state import (
     StateTask,
     StateEvent
 )
+from utils.url import normalize_base
 import asyncio
 import threading
 from common.types import Artifact, Message, Task, Part, TextPart
 
-server_url = "http://localhost:12000"
+# Get orchestrator URL from environment variable with a default fallback
+# and normalize it to ensure it has the correct scheme
+server_url = normalize_base(os.environ.get("ORCHESTRATOR_URL", "localhost:12000"))
 
 async def ListConversations() -> list[Conversation]:
   client = ConversationClient(server_url)
