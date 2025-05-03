@@ -1,9 +1,15 @@
 FROM python:3.12-slim
 WORKDIR /app
+
+# Copy common library FIRST
+COPY common/ ./common/
+
+# Copy requirements and install
 COPY visualization_agent/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy agent code AFTER installing requirements
 COPY visualization_agent/ .
-COPY common/ common/
 
 # Make port 8004 available inside the container network
 EXPOSE 8004
