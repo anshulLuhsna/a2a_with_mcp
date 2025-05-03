@@ -33,7 +33,7 @@ def normalize_base(url: str | None) -> str:
 # print(f"Using orchestrator base URL: {BASE}")  # Removed module-level log
 
 def api(path: str) -> str:
-    """Convert a relative API path to a full URL using the current ORCHESTRATOR_URL."""
+    """Convert a relative MCP API path to a full URL using the current ORCHESTRATOR_URL."""
     env_var_value = os.getenv("ORCHESTRATOR_URL")
     print(f"[api] os.getenv value: {repr(env_var_value)}")
     base_url = normalize_base(env_var_value)
@@ -42,6 +42,10 @@ def api(path: str) -> str:
     if not base_url.endswith('/'):
         base_url += '/'
 
-    url = urljoin(base_url, path.lstrip('/'))
+    # Prepend /mcp/ to the path for MCP endpoints
+    mcp_path = f"mcp/{path.lstrip('/')}"
+    print(f"[api] MCP path to join: {repr(mcp_path)}")
+
+    url = urljoin(base_url, mcp_path)
     print(f"[api] Constructed API URL with urljoin: {repr(url)}")
     return url 
