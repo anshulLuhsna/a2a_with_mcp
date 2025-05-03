@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15 # Use a specific version
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-financial_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme} # Use .env file for password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql # Mount init script
+    networks:
+      - app-net
+    restart: unless-stopped
+
+  orchestrator:
+    build:
+      context: .
+      dockerfile: orchestrator_agent/Dockerfile
+    container_name: orchestrator_agent
+    environment:
+      # API Keys (loaded from .env)
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      # Agent URLs (using service names and CORRECTED ports)
+      FINANCIAL_AGENT_URL: "http://financial:8001" # CORRECTED PORT
+      SENTIMENT_AGENT_URL: "http://sentiment:10000"
+      VISUALIZATION_AGENT_URL: "http://visualization:8004"
+      # Add any other URLs needed (competitor, prompt_templates if implemented)
+    networks:
+      - app-net
+    depends_on:
+      - financial
+      - sentiment
+      - visualization
+    restart: unless-stopped
+    # No ports exposed by default, only UI needs direct external access typically
+
+  financial:
+    build:
+      context: .
+      dockerfile: financial_agent_langgraph/Dockerfile
+    container_name: financial_agent
+    environment:
+      # API Keys
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      COINCAP_API_KEY: ${COINCAP_API_KEY}
+      # Database Connection
+      DB_HOST: postgres # Service name of the postgres container
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-financial_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-changeme}
+      PORT: 8001 # Ensure this matches the Dockerfile's EXPOSE/ENV if used
+      HOST: 0.0.0.0
+    networks:
+      - app-net
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  sentiment:
+    build:
+      context: .
+      dockerfile: sentiment_analysis_agent/Dockerfile
+    container_name: sentiment_agent
+    environment:
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      SENTIMENT_AGENT_PORT: 10000 # Ensure this matches the Dockerfile's EXPOSE/ENV if used
+      HOST: 0.0.0.0
+      # Add any other needed env vars (e.g., Reddit API if MCP server requires)
+    networks:
+      - app-net
+    restart: unless-stopped
+
+  visualization:
+    build:
+      context: .
+      dockerfile: visualization_agent/Dockerfile
+    container_name: visualization_agent
+    environment:
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      PORT: 8004 # Ensure this matches the Dockerfile's EXPOSE/ENV if used
+      HOST: 0.0.0.0
+    networks:
+      - app-net
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: .
+      dockerfile: demo/ui/Dockerfile
+    container_name: ui_app
+    ports:
+      - "80:12000" # Map host port 80 to CORRECTED container port 12000
+    environment:
+      # UI talks to orchestrator on its internal port 8000
+      ORCHESTRATOR_URL: "http://orchestrator:8000"
+    networks:
+      - app-net
+    depends_on:
+      - orchestrator # UI needs orchestrator to be ready
+    restart: unless-stopped
+
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  postgres_data: # Define a named volume for postgres data persistence

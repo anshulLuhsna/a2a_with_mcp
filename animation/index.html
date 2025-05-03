@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>A2A with MCP – Animated Architecture Diagram</title>
+
+<!-- ►►  ALL STYLES INLINE  ◄◄ -->
+<style>
+    /* =======  GENERAL  ======= */
+    :root{
+        --clr-user:#00bcd4;
+        --clr-orch:#ff9800;
+        --clr-fin:#4caf50;
+        --clr-sent:#8e24aa;
+        --clr-mcp:#f44336;
+        --clr-a2a:#1976d2;
+        --clr-mcp-line:#c2185b;
+        --dur-line:1000ms;           /* duration for one line draw */
+        --dur-highlight:600ms;       /* rectangle glow time        */
+    }
+    body{
+        margin:0;
+        font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+        background:#0e0e11;
+        color:#fff;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        min-height:100vh;
+        gap:1.5rem;
+        padding-top:1.5rem;
+    }
+    button{
+        all:unset;
+        background:#1e88e5;
+        color:#fff;
+        padding:.6rem 1.4rem;
+        border-radius:8px;
+        cursor:pointer;
+        font-weight:600;
+    }
+    button:hover{background:#2196f3}
+    button:disabled{opacity:.35;cursor:default}
+
+    /* =======  SVG ELEMENT STYLES  ======= */
+    svg{max-width:100%;height:auto}
+
+    .component{
+        stroke:#fff;
+        stroke-width:2px;
+        rx:6;ry:6;
+    }
+    .label{font-size:12px;fill:#fff;pointer-events:none;text-anchor:middle}
+
+    /* Color‑coding component types */
+    .user{fill:var(--clr-user)}
+    .orch{fill:var(--clr-orch)}
+    .fin{fill:var(--clr-fin)}
+    .sent{fill:var(--clr-sent)}
+    .mcp{fill:var(--clr-mcp)}
+
+    /* Connection lines */
+    .a2a-line{stroke:var(--clr-a2a);stroke-width:3;fill:none}
+    .mcp-line{stroke:var(--clr-mcp-line);stroke-width:3;fill:none}
+
+    /* Distinguish request vs response (solid vs dashed) */
+    .resp{stroke-dasharray:6 5}
+
+    /* Highlight glow effect */
+    .highlight{
+        filter:drop-shadow(0 0 6px #fff);
+    }
+</style>
+</head>
+
+<body>
+<button id="startBtn">Start Animation</button>
+
+<!-- ►►  SVG DIAGRAM  ◄◄ -->
+<svg id="diagram" viewBox="0 0 1000 550">
+    <!-- ==== COMPONENT RECTANGLES ==== -->
+    <!-- x,y,width,height -->
+    <rect id="user"           class="component user"  x="50"  y="245" width="120" height="60"/>
+    <text x="110" y="275" class="label">User</text>
+
+    <rect id="orch"           class="component orch"  x="300" y="245" width="160" height="60"/>
+    <text x="380" y="268" class="label">Orchestrator</text>
+    <text x="380" y="285" class="label">(Google ADK)</text>
+
+    <rect id="fin"            class="component fin"   x="550" y="120" width="160" height="60"/>
+    <text x="630" y="143" class="label">Financial Agent</text>
+    <text x="630" y="160" class="label">(LangGraph)</text>
+
+    <rect id="sent"           class="component sent"  x="550" y="370" width="160" height="60"/>
+    <text x="630" y="393" class="label">Sentiment Agent</text>
+    <text x="630" y="410" class="label">(CrewAI)</text>
+
+    <rect id="mcpPg"          class="component mcp"   x="820" y="50"  width="140" height="60"/>
+    <text x="890" y="80" class="label">MCP Server</text>
+    <text x="890" y="97" class="label">(Postgres)</text>
+
+    <rect id="mcpCr"          class="component mcp"   x="820" y="150" width="140" height="60"/>
+    <text x="890" y="180" class="label">MCP Server</text>
+    <text x="890" y="197" class="label">(Crypto API)</text>
+
+    <rect id="mcpRd"          class="component mcp"   x="820" y="350" width="140" height="60"/>
+    <text x="890" y="380" class="label">MCP Server</text>
+    <text x="890" y="397" class="label">(Reddit)</text>
+
+    <!-- ==== CONNECTION PATHS (in draw order) ==== -->
+    <!-- Request -->
+    <line id="l1" x1="170" y1="275" x2="300" y2="275" class="a2a-line"/>
+    <line id="l2" x1="460" y1="275" x2="550" y2="150" class="a2a-line"/>
+    <line id="l3" x1="710" y1="150" x2="820" y2="80"  class="mcp-line"/>
+    <line id="l4" x1="710" y1="150" x2="820" y2="180" class="mcp-line"/>
+    <!-- Response -->
+    <line id="l5" x1="820" y1="80"  x2="710" y2="150" class="mcp-line resp"/>
+    <line id="l6" x1="820" y1="180" x2="710" y2="150" class="mcp-line resp"/>
+    <!-- Further Request -->
+    <line id="l7" x1="460" y1="275" x2="550" y2="400" class="a2a-line"/>
+    <line id="l8" x1="710" y1="400" x2="820" y2="380" class="mcp-line"/>
+    <!-- Response back -->
+    <line id="l9"  x1="820" y1="380" x2="710" y2="400" class="mcp-line resp"/>
+    <line id="l10" x1="550" y1="150" x2="460" y2="275" class="a2a-line resp"/>
+    <line id="l11" x1="550" y1="400" x2="460" y2="275" class="a2a-line resp"/>
+    <line id="l12" x1="300" y1="275" x2="170" y2="275" class="a2a-line resp"/>
+</svg>
+
+<!-- ►►  SCRIPT  ◄◄ -->
+<script>
+/*
+    Animation strategy
+    ------------------
+    • Each line is preset with stroke-dasharray & stroke-dashoffset = total length (invisible)
+    • When a step starts, we:
+         1) highlight ‘from’ + ‘to’ rectangles
+         2) animate dashoffset → 0  (CSS transition)
+    • Sequence list describes in-order flow; can also group simultaneous IDs
+    • Button disables during run; reset() prepares diagram for re-run
+*/
+
+const lines = [...document.querySelectorAll('line')];
+const btn   = document.getElementById('startBtn');
+
+/* Prep lines: set dasharray = length and hide them */
+lines.forEach(l=>{
+    const len = l.getTotalLength();
+    l.style.strokeDasharray = len;
+    l.style.strokeDashoffset = len;
+    l.style.transition = `stroke-dashoffset var(--dur-line) linear`;
+});
+
+/* Utility – highlight rectangles briefly */
+function flash(ids){
+    ids.forEach(id=>{
+        const el = document.getElementById(id);
+        el.classList.add('highlight');
+    });
+    setTimeout(()=>ids.forEach(id=>{
+        document.getElementById(id).classList.remove('highlight');
+    }), parseFloat(getComputedStyle(document.documentElement)
+                   .getPropertyValue('--dur-highlight')));
+}
+
+/*   ---   SEQUENCE DEFINITION   ---   */
+const sequence = [
+    { path:['l1'],  from:'user', to:'orch' },
+    { path:['l2'],  from:'orch', to:'fin'  },
+    { path:['l3','l4'], from:'fin', to:'fin' },           // fin emitting to both MCPs
+    { path:['l5','l6'], from:'fin', to:'fin' },           // responses into fin
+    { path:['l7'],  from:'orch', to:'sent' },
+    { path:['l8'],  from:'sent', to:'sent' },
+    { path:['l9'],  from:'sent', to:'sent' },
+    { path:['l10'], from:'fin',  to:'orch' },
+    { path:['l11'], from:'sent', to:'orch' },
+    { path:['l12'], from:'orch', to:'user' }
+];
+
+/* Sequential animation runner */
+async function runSequence(){
+    btn.disabled = true;
+    for (const step of sequence){
+        flash([step.from, step.to]);
+        await Promise.all(step.path.map(id=>{
+            const line = document.getElementById(id);
+            return new Promise(resolve=>{
+                /* Restart the transition by forcing style recalc */
+                line.style.strokeDashoffset = line.getTotalLength();
+                // allow style to apply before transition
+                requestAnimationFrame(()=>{
+                    requestAnimationFrame(()=>{
+                        line.style.strokeDashoffset = 0;
+                    });
+                });
+                line.addEventListener('transitionend',resolve,{once:true});
+            });
+        }));
+        await pause(250); // small gap between steps
+    }
+    await pause(500);
+    btn.disabled = false;
+}
+
+/* Helper pause */
+function pause(ms){ return new Promise(res=>setTimeout(res,ms)); }
+
+/* Reset diagram to pristine dashed state */
+function resetLines(){
+    lines.forEach(l=>{
+        l.style.transition = 'none';
+        l.style.strokeDashoffset = l.getTotalLength();
+        /* force style flush */
+        void l.offsetWidth;
+        l.style.transition = `stroke-dashoffset var(--dur-line) linear`;
+    });
+    document.querySelectorAll('.highlight').forEach(el=>el.classList.remove('highlight'));
+}
+
+/*  Button click handler */
+btn.addEventListener('click',()=>{
+    resetLines();
+    runSequence();
+});
+</script>
+</body>
+</html>
