@@ -31,13 +31,9 @@ from urllib.parse import urlparse
 
 class ConversationClient:
 
-  def __init__(self, base_url):
-    # Ensure the base_url has a scheme
-    parsed_url = urlparse(base_url)
-    if not parsed_url.scheme:
-        self.base_url = f"http://{base_url}".rstrip("/")
-    else:
-        self.base_url = base_url.rstrip("/")
+  def __init__(self, base_url=None):
+    # The base_url is no longer needed here as _send_request uses api()
+    pass
 
   async def send_message(self, payload: SendMessageRequest) -> SendMessageResponse:
     return SendMessageResponse(**await self._send_request(payload))
@@ -45,8 +41,8 @@ class ConversationClient:
   async def _send_request(self, request: JSONRPCRequest) -> dict[str, Any]:
     async with httpx.AsyncClient() as client:
       try:
+        # api() now provides the full URL including the base
         endpoint_url = api(request.method)
-        # Log the endpoint URL for debugging
         print(f"Making request to: {endpoint_url}")
         response = await client.post(
           endpoint_url, json=request.model_dump()
@@ -54,12 +50,28 @@ class ConversationClient:
         response.raise_for_status()
         return response.json()
       except httpx.HTTPStatusError as e:
-        raise AgentClientHTTPError(e.response.status_code, str(e)) from e
+        # Provide more context in the error message
+        error_message = f"HTTP Error {e.response.status_code} calling {e.request.url}: {str(e)}"
+        print(error_message)
+        # Optionally, inspect e.response.text for more details from the server
+        # print(f"Response body: {e.response.text}") 
+        raise AgentClientHTTPError(e.response.status_code, error_message) from e
+      except httpx.RequestError as e:
+         # Handle connection errors, timeouts etc.
+        error_message = f"Request failed for {e.request.url}: {str(e)}"
+        print(error_message)
+        raise AgentClientHTTPError(500, error_message) from e # Use a generic 500 or specific code
       except json.JSONDecodeError as e:
-        raise AgentClientJSONError(str(e)) from e
+        error_message = f"Failed to decode JSON response: {str(e)}"
+        print(error_message)
+        raise AgentClientJSONError(error_message) from e
       except Exception as e:
-        print(f"Unexpected error in _send_request: {str(e)}")
-        return {"result": None}  # Return a default result that won't break the calling code
+        # Catch unexpected errors
+        error_message = f"Unexpected error in _send_request: {str(e)}"
+        print(error_message)
+        # Returning a dict might hide the error, better to raise
+        # return {"result": None} # Avoid this if possible
+        raise AgentClientHTTPError(500, error_message) from e 
 
   async def create_conversation(self, payload: CreateConversationRequest) -> CreateConversationResponse:
     return CreateConversationResponse(**await self._send_request(payload))
