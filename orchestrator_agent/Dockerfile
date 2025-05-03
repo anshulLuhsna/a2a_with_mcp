@@ -14,9 +14,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy agent code AFTER installing requirements to the proper subdirectory
 COPY orchestrator_agent/ /app/orchestrator_agent/
 
-# Install the agent package in development mode to make it importable via -m
-RUN pip install -e /app/orchestrator_agent
-
 # Add app directory to Python path
 ENV PYTHONPATH="/app:${PYTHONPATH}"
 
