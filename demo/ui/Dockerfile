@@ -14,7 +14,8 @@ RUN uv pip install --system --no-cache-dir -r pyproject.toml
 COPY demo/ui/ /app/ui/
 
 # Add this step to print the file content during build
-RUN echo "--- Content of url_utils.py during build: ---" && cat /app/ui/state/url_utils.py && echo "----------------------------------------------"
+# Redirect stderr to stdout to ensure output is captured
+RUN echo "--- Content of url_utils.py during build: ---" && cat /app/ui/state/url_utils.py 2>&1 && echo "----------------------------------------------"
 
 RUN uv pip install --system --no-cache-dir -e /app/ui
 
