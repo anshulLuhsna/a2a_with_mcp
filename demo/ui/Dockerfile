@@ -8,7 +8,7 @@ RUN pip install uv
 COPY demo/ui/pyproject.toml demo/ui/uv.lock* ./
 
 # Install exactly what is pinned in uv.lock
-RUN uv pip sync pyproject.toml --no-cache-dir
+RUN uv sync --system --no-cache-dir
 
 # Copy the rest of the UI code
 COPY demo/ui/ .
