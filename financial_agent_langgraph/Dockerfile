@@ -8,17 +8,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends nodejs npm && \
 WORKDIR /app
 
 # Copy common library FIRST
-COPY common/ ./common/
+COPY common/ /app/common/
 
 # Copy requirements and install
 COPY financial_agent_langgraph/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy agent code AFTER installing requirements
-COPY financial_agent_langgraph/ .
+# Copy agent code AFTER installing requirements to the proper subdirectory
+COPY financial_agent_langgraph/ /app/financial_agent_langgraph/
+
+# Install the agent package in development mode to make it importable via -m
+RUN pip install -e /app/financial_agent_langgraph
 
 # Copy the MCP server script (keep this relative position if needed)
-COPY MCP-servers/postgres_mcp.py MCP-servers/postgres_mcp.py
+COPY MCP-servers/postgres_mcp.py /app/MCP-servers/postgres_mcp.py
+
+# Add app directory to Python path
+ENV PYTHONPATH="/app:${PYTHONPATH}"
 
 # Make port 8001 available inside the container network
 EXPOSE 8001
