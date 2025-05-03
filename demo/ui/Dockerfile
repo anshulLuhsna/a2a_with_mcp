@@ -6,7 +6,7 @@ RUN pip install uv
 
 # Copy dependency definition files
 COPY demo/ui/pyproject.toml demo/ui/uv.lock* ./
-COPY demo/ui/requirements.txt ./
+
 
 # Install dependencies using uv
 RUN uv pip install --no-cache-dir -r requirements.txt
