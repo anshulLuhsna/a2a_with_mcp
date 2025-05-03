@@ -4,10 +4,10 @@ WORKDIR /app
 # Install uv
 RUN pip install uv
 
-# Copy dependency definition files
-COPY demo/ui/pyproject.toml demo/ui/uv.lock* ./
+# Copy dependency definition files and README
+COPY demo/ui/pyproject.toml demo/ui/uv.lock* demo/ui/README.md ./
 
-# Install exactly what is pinned in uv.lock
+# Install all deps into the system interpreter at build‑time
 RUN uv pip install --system --no-cache-dir -r pyproject.toml
 
 # Copy the rest of the UI code to its proper subdirectory
@@ -22,5 +22,5 @@ ENV PYTHONPATH="/app:${PYTHONPATH}"
 EXPOSE 12000
 ENV ORCHESTRATOR_URL="http://orchestrator:8000"
 
-# Use the correct path to main.py 
-CMD ["uv", "run", "/app/ui/main.py", "--host", "0.0.0.0", "--port", "12000"]
+# Run Python directly instead of using uv run
+CMD ["python", "/app/ui/main.py", "--host", "0.0.0.0", "--port", "12000"]

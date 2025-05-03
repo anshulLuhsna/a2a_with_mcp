@@ -9,4 +9,5 @@ requests>=2.28.0
 # For A2A common types
 # Assuming A2A common types are available one level up
 # Add relative path or installable package if needed
-# e.g., -e ../common 
+# e.g., -e ../common
+sse_starlette>=1.6.5 
