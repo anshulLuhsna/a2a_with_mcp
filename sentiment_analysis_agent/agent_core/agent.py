@@ -34,7 +34,7 @@ else:
     sys.exit(1)
 
 from dotenv import load_dotenv
-from google import genai
+from google import generativeai as genai
 import json
 from mcp.client.stdio import stdio_client, StdioServerParameters
 from mcp import ClientSession

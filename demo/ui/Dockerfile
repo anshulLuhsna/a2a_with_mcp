@@ -10,9 +10,9 @@ COPY demo/ui/pyproject.toml demo/ui/uv.lock* demo/ui/README.md ./
 # Install all deps into the system interpreter at build‑time
 RUN uv pip install --system --no-cache-dir -r pyproject.toml
 
-# Copy full UI code (including hosts/) and expose on PYTHONPATH
+# Copy UI code and install it in editable mode
 COPY demo/ui/ /app/ui/
-ENV PYTHONPATH="/app/ui:/app:${PYTHONPATH}"
+RUN uv pip install --system --no-cache-dir -e /app/ui
 
 # Copy common library for imports
 COPY common/ /app/common/
