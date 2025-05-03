@@ -26,13 +26,13 @@ from .state import (
     StateTask,
     StateEvent
 )
-from .url_utils import api
+from .url_utils import BASE as server_url, api
 import asyncio
 import threading
 from common.types import Artifact, Message, Task, Part, TextPart
 
 async def ListConversations() -> list[Conversation]:
-  client = ConversationClient()
+  client = ConversationClient(server_url)
   try:
     response = await client.list_conversation(ListConversationRequest())
     return response.result
@@ -41,7 +41,7 @@ async def ListConversations() -> list[Conversation]:
     return []
 
 async def SendMessage(message: Message) -> str | None:
-  client = ConversationClient()
+  client = ConversationClient(server_url)
   try:
     response = await client.send_message(SendMessageRequest(params=message))
     return response.result
@@ -49,7 +49,7 @@ async def SendMessage(message: Message) -> str | None:
     print("Failed to send message: ", e)
 
 async def CreateConversation() -> Conversation:
-  client = ConversationClient()
+  client = ConversationClient(server_url)
   try:
    response = await client.create_conversation(CreateConversationRequest())
    return response.result
@@ -57,7 +57,7 @@ async def CreateConversation() -> Conversation:
     print("Failed to create conversation", e)
 
 async def ListRemoteAgents():
-  client = ConversationClient()
+  client = ConversationClient(server_url)
   try:
     response = await client.list_agents(ListAgentRequest())
     return response.result
@@ -66,14 +66,14 @@ async def ListRemoteAgents():
     return []
 
 async def AddRemoteAgent(path: str):
-  client = ConversationClient()
+  client = ConversationClient(server_url)
   try:
     await client.register_agent(RegisterAgentRequest(params=path))
   except Exception as e:
     print("Failed to register the agent", e)
 
 async def GetEvents() -> list[Event]:
-  client = ConversationClient()
+  client = ConversationClient(server_url)
   try:
     response = await client.get_events(GetEventRequest())
     return response.result
@@ -82,7 +82,7 @@ async def GetEvents() -> list[Event]:
     return []
 
 async def GetProcessingMessages():
-  client = ConversationClient()
+  client = ConversationClient(server_url)
   try:
     response = await client.get_pending_messages(PendingMessageRequest())
     result = response.result
@@ -95,7 +95,7 @@ def GetMessageAliases():
   return {}
 
 async def GetTasks() -> List[Task]:
-  client = ConversationClient()
+  client = ConversationClient(server_url)
   try:
     response = await client.list_tasks(ListTaskRequest())
     return response.result or []  # Return empty list if response.result is None
@@ -104,7 +104,7 @@ async def GetTasks() -> List[Task]:
     return []  # Return empty list on error
 
 async def ListMessages(conversation_id: str) -> list[Message]:
-  client = ConversationClient()
+  client = ConversationClient(server_url)
   try:
     response = await client.list_messages(ListMessageRequest(params=conversation_id))
     return response.result or [] # Return empty list if None

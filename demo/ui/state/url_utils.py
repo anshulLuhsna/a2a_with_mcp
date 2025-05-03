@@ -2,50 +2,30 @@ from urllib.parse import urlparse, urljoin
 import os
 
 def normalize_base(url: str | None) -> str:
-    """Normalize the base URL to ensure it has a scheme (http/https) and no trailing slashes."""
-    print(f"[normalize_base] Received URL: {repr(url)}")
-    input_url = url or "orchestrator:8000"
-    print(f"[normalize_base] input_url after default: {repr(input_url)}")
-
-    parsed = urlparse(input_url)
-    print(f"[normalize_base] parsed scheme: {repr(parsed.scheme)}")
-
-    final_url = ""
+    """Normalize the base URL to ensure it has a scheme and no trailing slashes."""
+    # Use the provided URL or default to the localhost UI server URL
+    url = url or f"http://localhost:{os.environ.get('A2A_UI_PORT', '12000')}" 
+    parsed = urlparse(url)
     # Check if the scheme is specifically http or https
-    if parsed.scheme in ('http', 'https'): 
-        print(f"[normalize_base] Scheme '{parsed.scheme}' exists path")
-        final_url = input_url.rstrip('/')
-    else:
+    if parsed.scheme not in ('http', 'https'): 
         # Scheme is missing or is not http/https (like 'orchestrator')
-        print(f"[normalize_base] Scheme MISSING or invalid ('{parsed.scheme}') path")
-        scheme_prefix = "http://"
-        # Use the original input_url here, as parsing might have misinterpreted it
-        url_part = input_url.rstrip('/') 
-        print(f"[normalize_base] scheme_prefix: {repr(scheme_prefix)}")
-        print(f"[normalize_base] url_part: {repr(url_part)}")
-        final_url = f"{scheme_prefix}{url_part}"
-        print(f"[normalize_base] final_url inside else: {repr(final_url)}")
-
-    print(f"[normalize_base] Returning final_url: {repr(final_url)}")
+        url = f"http://{url.rstrip('/')}"
+    
+    final_url = url.rstrip('/')
+    print(f"[url_utils] Normalized base URL: {repr(final_url)}")
     return final_url
 
-# BASE = normalize_base(os.getenv("ORCHESTRATOR_URL")) # Removed module-level calculation
-# print(f"Using orchestrator base URL: {BASE}")  # Removed module-level log
+# Calculate BASE at module level using the environment variable for the LOCAL UI server
+# This is what ConversationServer expects host_agent_service to talk to.
+BASE = normalize_base(os.getenv("A2A_UI_SELF_URL")) # Use a specific var or construct from host/port
+print(f"[url_utils] Using BASE URL for host_agent_service: {repr(BASE)}") 
 
 def api(path: str) -> str:
-    """Convert a relative MCP API path to a full URL using the current ORCHESTRATOR_URL."""
-    env_var_value = os.getenv("ORCHESTRATOR_URL")
-    print(f"[api] os.getenv value: {repr(env_var_value)}")
-    base_url = normalize_base(env_var_value)
-    print(f"[api] base_url after normalize: {repr(base_url)}")
-
-    if not base_url.endswith('/'):
-        base_url += '/'
-
-    # Prepend /mcp/ to the path for MCP endpoints
-    mcp_path = f"mcp/{path.lstrip('/')}"
-    print(f"[api] MCP path to join: {repr(mcp_path)}")
-
-    url = urljoin(base_url, mcp_path)
-    print(f"[api] Constructed API URL with urljoin: {repr(url)}")
+    """Convert a relative API path to a full URL relative to the BASE."""
+    # Ensure base_url ends with a slash for urljoin
+    base_url_with_slash = BASE if BASE.endswith('/') else BASE + '/'
+    
+    # Do NOT prepend /mcp/ here, as ConversationServer defines routes at the root
+    url = urljoin(base_url_with_slash, path.lstrip('/')) 
+    print(f"[url_utils] Constructed API URL for host_agent_service: {repr(url)}")
     return url 
