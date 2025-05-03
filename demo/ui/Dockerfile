@@ -4,12 +4,14 @@ WORKDIR /app
 # Install uv
 RUN pip install uv
 
-# Copy UI code and dependencies definition
-COPY demo/ui/pyproject.toml demo/ui/uv.lock* demo/ui/requirements.txt ./
+# Copy dependency definition files
+COPY demo/ui/pyproject.toml demo/ui/uv.lock* ./
+COPY demo/ui/requirements.txt ./
 
 # Install dependencies using uv
 RUN uv pip install --no-cache-dir -r requirements.txt
 
+# Copy the rest of the UI code
 COPY demo/ui/ .
 
 # Make port 12000 available inside the container network
