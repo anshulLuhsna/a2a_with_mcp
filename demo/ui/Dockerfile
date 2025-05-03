@@ -12,6 +12,10 @@ RUN uv pip install --system --no-cache-dir -r pyproject.toml
 
 # Copy UI code and install it in editable mode
 COPY demo/ui/ /app/ui/
+
+# Add this step to print the file content during build
+RUN echo "--- Content of url_utils.py during build: ---" && cat /app/ui/state/url_utils.py && echo "----------------------------------------------"
+
 RUN uv pip install --system --no-cache-dir -e /app/ui
 
 # Copy common library for imports
