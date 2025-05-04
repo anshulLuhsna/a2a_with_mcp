@@ -128,14 +128,15 @@ server = create_server(host, port)
 if mcp:
     logger.info(f"Attempting to mount MCP server (type: {type(mcp)}) at /mcp")
     try:
-        mcp_app = mcp.sse_app() # Get the app to mount
-        app.mount("/mcp", mcp_app)
+        # Mount the entire MCP application, not just the SSE part
+        app.mount("/mcp", mcp) # Use 'mcp' directly
         logger.info("Successfully mounted MCP server at /mcp")
     except Exception as e:
         logger.exception("!!! FAILED to mount MCP server !!!")
 else:
     logger.warning("MCP server instance not available, skipping mount.")
 
+# Mount A2A server AFTER MCP to avoid path conflicts if MCP has root paths
 logger.info("Attempting to mount A2A server at /")
 try:
     app.mount("/", server.app)
