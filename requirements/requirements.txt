@@ -57,7 +57,6 @@ executing==2.2.0
 fastapi==0.115.9
 filelock==3.16.1
 # Editable install with no version control (financial-sentiment-agent==1.0.0)
--e /home/anshul/Desktop/A2A/financial_sentiment_agent
 Flask==2.2.3
 Flask-Cors==5.0.0
 Flask-Testing==0.8.1
