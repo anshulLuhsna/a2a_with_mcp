@@ -8,17 +8,17 @@ import threading
 
 import mesop as me
 
-from state.state import AppState
-from components.page_scaffold import page_scaffold
-from components.api_key_dialog import api_key_dialog
-from pages.home import home_page_content
-from pages.agent_list import agent_list_page
-from pages.conversation import conversation_page
-from pages.event_list import event_list_page
-from pages.settings import settings_page_content
-from pages.task_list import task_list_page
-from state import host_agent_service
-from service.server.server import ConversationServer
+from .state.state import AppState
+from .components.page_scaffold import page_scaffold
+from .components.api_key_dialog import api_key_dialog
+from .pages.home import home_page_content
+from .pages.agent_list import agent_list_page
+from .pages.conversation import conversation_page
+from .pages.event_list import event_list_page
+from .pages.settings import settings_page_content
+from .pages.task_list import task_list_page
+from .state import host_agent_service
+from .service.server.server import ConversationServer
 
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.wsgi import WSGIMiddleware
