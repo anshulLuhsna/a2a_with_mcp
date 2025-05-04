@@ -39,6 +39,7 @@ class A2AClient:
         self, payload: dict[str, Any]
     ) -> AsyncIterable[SendTaskStreamingResponse]:
         request = SendTaskStreamingRequest(params=payload)
+        print(f"[A2AClient] Attempting SSE connection to: {self.url}")
         with httpx.Client(timeout=None) as client:
             with connect_sse(
                 client, "POST", self.url, json=request.model_dump()
