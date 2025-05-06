@@ -2,23 +2,33 @@
 run:
   uv main.py
 """
-import asyncio
 import os
+import sys
+
+# Add the project root to sys.path to allow absolute imports
+# __file__ is /home/anshul/Desktop/A2A_with_MCP/demo/ui/main.py
+_main_py_dir = os.path.dirname(os.path.abspath(__file__))
+# _project_root is /home/anshul/Desktop/A2A_with_MCP
+_project_root = os.path.abspath(os.path.join(_main_py_dir, '..', '..'))
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+
+import asyncio
 import threading
 
 import mesop as me
 
-from .state.state import AppState
-from .components.page_scaffold import page_scaffold
-from .components.api_key_dialog import api_key_dialog
-from .pages.home import home_page_content
-from .pages.agent_list import agent_list_page
-from .pages.conversation import conversation_page
-from .pages.event_list import event_list_page
-from .pages.settings import settings_page_content
-from .pages.task_list import task_list_page
-from .state import host_agent_service
-from .service.server.server import ConversationServer
+from demo.ui.state.state import AppState
+from demo.ui.components.page_scaffold import page_scaffold
+from demo.ui.components.api_key_dialog import api_key_dialog
+from demo.ui.pages.home import home_page_content
+from demo.ui.pages.agent_list import agent_list_page
+from demo.ui.pages.conversation import conversation_page
+from demo.ui.pages.event_list import event_list_page
+from demo.ui.pages.settings import settings_page_content
+from demo.ui.pages.task_list import task_list_page
+from demo.ui.state import host_agent_service
+from demo.ui.service.server.server import ConversationServer
 
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.wsgi import WSGIMiddleware
